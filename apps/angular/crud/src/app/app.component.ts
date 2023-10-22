@@ -1,51 +1,45 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
-import { randText } from '@ngneat/falso';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  ViewEncapsulation,
+} from '@angular/core';
+import { TodoService } from './todo.service';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   standalone: true,
   imports: [CommonModule],
   selector: 'app-root',
   template: `
-    <div *ngFor="let todo of todos">
-      {{ todo.title }}
-      <button (click)="update(todo)">Update</button>
+    <div *ngIf="todos()?.loading">loading...</div>
+    <div>
+      <ng-container *ngIf="todos()?.error; else noError">
+        error loading page
+      </ng-container>
+      <ng-template #noError>
+        <div *ngIf="todos()?.todo as todos">
+          <div *ngFor="let todo of todos">
+            {{ todo.title }}
+            <button>Update</button>
+          </div>
+        </div>
+      </ng-template>
     </div>
   `,
   styles: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class AppComponent implements OnInit {
-  todos!: any[];
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private todoService = inject(TodoService);
+  todos = toSignal(this.todoService.todos$);
 
   ngOnInit(): void {
-    this.http
-      .get<any[]>('https://jsonplaceholder.typicode.com/todos')
-      .subscribe((todos) => {
-        this.todos = todos;
-      });
-  }
-
-  update(todo: any) {
-    this.http
-      .put<any>(
-        `https://jsonplaceholder.typicode.com/todos/${todo.id}`,
-        JSON.stringify({
-          todo: todo.id,
-          title: randText(),
-          body: todo.body,
-          userId: todo.userId,
-        }),
-        {
-          headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-          },
-        }
-      )
-      .subscribe((todoUpdated: any) => {
-        this.todos[todoUpdated.id - 1] = todoUpdated;
-      });
+    this.todoService.getTodos().subscribe();
   }
 }
