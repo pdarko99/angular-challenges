@@ -17,14 +17,14 @@ export class TodoService {
       .get<Todo[]>('https://jsonplaceholder.typicode.com/todos')
       .pipe(tap((x) => setTodos(x)));
 
-  updateTodos = (todo: Todo) => {
+  updateTodos = (todo?: Todo) => {
     return this.http.put<Todo>(
-      `https://jsonplaceholder.typicode.com/todos/${todo.id}`,
+      `https://jsonplaceholder.typicode.com/todos/${todo?.id}`,
       JSON.stringify({
-        todo: todo.id,
+        todo: todo?.id,
         title: randText(),
-        body: todo.body,
-        userId: todo.userId,
+        body: todo?.body,
+        userId: todo?.userId,
       }),
       {
         headers: {

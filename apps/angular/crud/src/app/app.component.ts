@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -9,10 +9,11 @@ import {
 } from '@angular/core';
 import { TodoService } from './todo.service';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { TodoItemComponent } from './todo-item.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [NgIf, NgFor, TodoItemComponent],
   selector: 'app-root',
   template: `
     <div *ngIf="todos()?.loading">loading...</div>
@@ -23,8 +24,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
       <ng-template #noError>
         <div *ngIf="todos()?.todo as todos">
           <div *ngFor="let todo of todos">
-            {{ todo.title }}
-            <button>Update</button>
+            <app-todo-item [todo]="todo"> </app-todo-item>
           </div>
         </div>
       </ng-template>
