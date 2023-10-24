@@ -1,66 +1,50 @@
-import { createStore, select, setProps, withProps } from '@ngneat/elf';
-import { Todo } from './todo';
+import { createStore } from '@ngneat/elf';
 import {
   getAllEntities,
   selectAllEntities,
+  selectEntity,
   setEntities,
   withEntities,
 } from '@ngneat/elf-entities';
 import {
-  withRequestsStatus,
   createRequestDataSource,
+  withRequestsStatus,
 } from '@ngneat/elf-requests';
+import { Todo } from './todo';
 
-const todo = createStore(
+const todosStore = createStore(
   {
-    name: 'todoStore',
+    name: 'todosStore',
   },
   withEntities<Todo>(),
-  withProps<{
-    loadingSingleTodo: boolean;
-  }>({
-    loadingSingleTodo: false,
-  }),
   withRequestsStatus()
 );
 
-const todoDataSource = createRequestDataSource({
-  data$: () => todo.pipe(selectAllEntities()),
+const todosDataSource = createRequestDataSource({
+  data$: () => todosStore.pipe(selectAllEntities()),
   dataKey: 'todo',
   idleAsPending: true,
   requestKey: 'todo',
-  store: todo,
+  store: todosStore,
+});
+
+export const todoDataSource = createRequestDataSource({
+  data$: (key: Todo['id']) => todosStore.pipe(selectEntity(key)),
+  dataKey: 'todo',
+  idleAsPending: true,
+  requestStatusOptions: { groupKey: 'todos' },
+  store: todosStore,
 });
 
 export function setTodos(todos: Todo[]) {
-  todo.update(setEntities(todos), todoDataSource.setSuccess());
-}
-
-export const selectTodo$ = todo.pipe(
-  select((state) => ({ loading: state.loadingSingleTodo }))
-);
-
-export function setIsTodoLoading() {
-  todo.update(
-    setProps({
-      loadingSingleTodo: true,
-    })
-  );
-}
-
-export function setNotLoading() {
-  todo.update(
-    setProps({
-      loadingSingleTodo: false,
-    })
-  );
+  todosStore.update(setEntities(todos), todosDataSource.setSuccess());
 }
 
 export function getTodos() {
-  return todo.query(getAllEntities());
+  return todosStore.query(getAllEntities());
 }
 
-export const todoDataSource$ = todoDataSource.data$();
+export const todosDataSource$ = todosDataSource.data$();
 
 // export function setBooks(book: Book[]) {
 //     bookStore.update(
